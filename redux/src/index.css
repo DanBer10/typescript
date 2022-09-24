@@ -1,0 +1,18 @@
+body {
+  background-color: rgb(223, 223, 223);
+}
+
+.App {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+}
+
+article {
+  border: 1px solid black;
+  margin: 20px 0;
+  max-width: 400px;
+  padding: 30px;
+}
