@@ -31,6 +31,20 @@ export const addNewPost = createAsyncThunk(
   }
 );
 
+export const updatePost = createAsyncThunk(
+  "posts/updatePost",
+  async (initialPost: any) => {
+    const { id } = initialPost;
+    try {
+      const response = await axios.put(`${POSTS_URL}/${id}`, initialPost);
+      return response.data;
+    } catch (err) {
+      //return err.message;
+      return initialPost; // only for testing Redux!
+    }
+  }
+);
+
 const postsSlice = createSlice({
   name: "posts",
   initialState,
@@ -95,18 +109,6 @@ const postsSlice = createSlice({
         state.error = action.error.message;
       })
       .addCase(addNewPost.fulfilled, (state: any, action: any) => {
-        // Fix for API post IDs:
-        // Creating sortedPosts & assigning the id
-        // would be not be needed if the fake API
-        // returned accurate new post IDs
-        const sortedPosts = state.posts.sort((a: any, b: any) => {
-          if (a.id > b.id) return 1;
-          if (a.id < b.id) return -1;
-          return 0;
-        });
-        action.payload.id = sortedPosts[sortedPosts.length - 1].id + 1;
-        // End fix for fake API post IDs
-
         action.payload.userId = Number(action.payload.userId);
         action.payload.date = new Date().toISOString();
         action.payload.reactions = {
@@ -118,6 +120,17 @@ const postsSlice = createSlice({
         };
         console.log(action.payload);
         state.posts.push(action.payload);
+      })
+      .addCase(updatePost.fulfilled, (state: any, action: any) => {
+        if (!action.payload?.id) {
+          console.log("Update could not complete");
+          console.log(action.payload);
+          return;
+        }
+        const { id } = action.payload;
+        action.payload.date = new Date().toISOString();
+        const posts = state.posts.filter((post: any) => post.id !== id);
+        state.posts = [...posts, action.payload];
       });
   },
 });
@@ -125,6 +138,9 @@ const postsSlice = createSlice({
 export const selectAllPosts = (state: any) => state.posts.posts;
 export const getPostsStatus = (state: any) => state.posts.status;
 export const getPostsError = (state: any) => state.posts.error;
+
+export const selectPostById = (state: any, postId: any) =>
+  state.posts.posts.find((post) => post.id === postId);
 
 export const { postAdded, reactionAdded } = postsSlice.actions;
 
